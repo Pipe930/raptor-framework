@@ -1,0 +1,31 @@
+{
+  "name": "express-typescript",
+  "version": "1.0.0",
+  "description": "express project version test",
+  "main": "src/main.ts",
+  "scripts": {
+    "exec": "ts-node src/main.ts",
+    "lint": "eslint \"{src,tests}/**/*.ts\" --fix",
+    "dev": "NODE_ENV=development nodemon src/main.ts",
+    "test": "NODE_ENV=tst jest --verbose",
+    "test:watch": "jest --watch",
+    "test:cov": "jest --coverage",
+    "build": "tsc",
+    "watch": "tsc -w"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@jest/globals": "30.2.0",
+    "@types/jest": "30.0.0",
+    "@types/node": "25.0.8",
+    "eslint": "9.39.2",
+    "jest": "30.2.0",
+    "nodemon": "3.1.11",
+    "ts-jest": "29.4.6",
+    "ts-node": "10.9.2",
+    "typescript": "5.9.3",
+    "typescript-eslint": "8.53.0"
+  }
+}
