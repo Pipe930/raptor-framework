@@ -1,30 +1,19 @@
-import { Router } from "./routes/router";
-import { HttpMethods } from "./enums/methods";
 import { createServer } from "node:http";
+import { CreateServer } from "./app/createServer";
+import { Request } from "./http/request";
 
-const router = new Router();
+const PORT = 3000;
 
-router.get("/home", () => {
-  const message = "Welcome to the Home Page!";
-  return message;
+const httpServer = createServer((req, res) => {
+  const request = Request.from(new CreateServer(req));
+
+  console.log(`Ruta: ${request.getUrl}`);
+  console.log(`Método: ${request.getMethod}`);
+  console.log(request.getHeaders);
+  request.getData();
+  res.end("Request procesado");
 });
 
-router.post("/home", () => {
-  const message = "Created resource on Home Page!";
-  return message;
-});
-
-const server = createServer((req, res) => {
-  try {
-    const handler = router.resolve(req.method as HttpMethods, req.url);
-    res.statusCode = 200;
-    res.end(handler());
-  } catch (error) {
-    res.statusCode = 404;
-    res.end("Not Found");
-  }
-});
-
-server.listen(process.env.PORT || 3000, () => {
-  console.log("Server is running...");
-});
+httpServer.listen(PORT, () =>
+  console.log(`Servidor corriendo en puerto ${PORT}`),
+);

@@ -30,11 +30,15 @@ export default defineConfig(
     rules: {
       eqeqeq: ["error", "always"],
       "no-empty-function": "error",
+      "no-trailing-spaces": "error",
+      "object-curly-spacing": ["error", "always"],
+      "arrow-spacing": "error",
+      "no-console": "warn",
       "no-implicit-coercion": "warn",
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       "@typescript-eslint/no-duplicate-enum-values": "warn",
       "@typescript-eslint/no-floating-promises": "warn",
       "@typescript-eslint/no-unsafe-argument": "warn",
     },
-  }
+  },
 );
