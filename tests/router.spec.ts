@@ -10,29 +10,32 @@ describe("RouterTest", () => {
 
   it("should resolve basic route with callback action", () => {
     const url = "/test";
-    const action = () => "test";
+    const action = jest.fn();
     router.get(url, action);
 
-    expect(action).toEqual(router.resolve(HttpMethods.get, url));
+    const routerResolve = router.resolve(HttpMethods.get, url);
+
+    expect(action).toEqual(routerResolve.getAction);
+    expect(url).toBe(routerResolve.getUrl);
   });
 
   it("should resolve multiple basic routees with callback actions", () => {
     const routes = [
       {
         url: "/posts",
-        action: () => "posts",
+        action: jest.fn(),
       },
       {
         url: "/products",
-        action: () => "products",
+        action: jest.fn(),
       },
       {
         url: "/users",
-        action: () => "users",
+        action: jest.fn(),
       },
       {
         url: "/categories",
-        action: () => "categories",
+        action: jest.fn(),
       },
     ];
 
@@ -41,7 +44,11 @@ describe("RouterTest", () => {
     });
 
     routes.forEach((route) => {
-      expect(route.action).toEqual(router.resolve(HttpMethods.get, route.url));
+      expect(route.action).toEqual(
+        router.resolve(HttpMethods.get, route.url).getAction,
+      );
+
+      expect(route.url).toBe(router.resolve(HttpMethods.get, route.url).getUrl);
     });
   });
 
@@ -66,10 +73,20 @@ describe("RouterTest", () => {
     router.patch(url, pathHandler);
     router.delete(url, deleteHandler);
 
-    expect(router.resolve(HttpMethods.get, "/posts")).toBe(getHandler);
-    expect(router.resolve(HttpMethods.post, "/posts")).toBe(postHandler);
-    expect(router.resolve(HttpMethods.put, "/posts")).toBe(putHandler);
-    expect(router.resolve(HttpMethods.patch, "/posts")).toBe(pathHandler);
-    expect(router.resolve(HttpMethods.delete, "/posts")).toBe(deleteHandler);
+    expect(router.resolve(HttpMethods.get, "/posts").getAction).toEqual(
+      getHandler,
+    );
+    expect(router.resolve(HttpMethods.post, "/posts").getAction).toEqual(
+      postHandler,
+    );
+    expect(router.resolve(HttpMethods.put, "/posts").getAction).toEqual(
+      putHandler,
+    );
+    expect(router.resolve(HttpMethods.patch, "/posts").getAction).toEqual(
+      pathHandler,
+    );
+    expect(router.resolve(HttpMethods.delete, "/posts").getAction).toEqual(
+      deleteHandler,
+    );
   });
 });
