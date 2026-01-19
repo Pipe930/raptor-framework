@@ -2,6 +2,7 @@ import { HashMapRouters, RouteHandler } from "../utils/types";
 import { HttpMethods } from "../enums/methods";
 import { Request } from "../http/request";
 import { Layer } from "./layer";
+import { HttpNotFoundException } from "../exceptions/httpNotFoundException";
 export class Router {
   protected routes: HashMapRouters = Object.create(null) as HashMapRouters;
 
@@ -20,7 +21,7 @@ export class Router {
       }
     }
 
-    throw new Error("Route not found");
+    throw new HttpNotFoundException("Route not found");
   }
 
   protected registerRoute(

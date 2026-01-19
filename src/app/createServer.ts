@@ -1,7 +1,8 @@
 import { HttpMethods } from "../enums/methods";
-import { IncomingMessage } from "node:http";
+import { IncomingMessage, ServerResponse } from "node:http";
 import { Headers } from "../utils/types";
 import { Server } from "./server";
+import { Response } from "../http/response";
 
 export class CreateServer implements Server {
   private request: IncomingMessage;
@@ -46,5 +47,22 @@ export class CreateServer implements Server {
 
   public queryParams(): Record<string, any> {
     return Object.fromEntries(this.urlHost.searchParams.entries());
+  }
+
+  public sendResponse(res: ServerResponse, response: Response) {
+    response.prepare();
+    const content = response.getContent;
+    res.statusCode = response.getStatus;
+
+    const headers = response.getHeaders;
+    for (const [header, value] of Object.entries(headers)) {
+      res.setHeader(header, value as string);
+    }
+
+    if (!content) {
+      res.removeHeader("Content-Type");
+    }
+
+    res.end(content);
   }
 }
