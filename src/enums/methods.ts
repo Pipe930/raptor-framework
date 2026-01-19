@@ -1,3 +1,6 @@
+/**
+ * HTTP Methods Verbs
+ */
 export enum HttpMethods {
   get = "GET",
   post = "POST",
