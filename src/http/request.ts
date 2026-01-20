@@ -102,8 +102,10 @@ export class Request {
    * Recupera los parámetros de consulta (query strings) de la URL.
    * @returns {Record<string, any>} Objeto clave-valor.
    */
-  get getParams(): Record<string, any> {
-    return this.query;
+  public getParams(key: string = null): Record<string, any> | string | null {
+    if (key === null) return this.query;
+
+    return (this.query[key] as string) ?? null;
   }
 
   /**
@@ -121,16 +123,23 @@ export class Request {
    * @example Si la ruta es /user/{id} y la URL es /user/10, devuelve { id: '10' }.
    * @returns {Record<string, any>} Parámetros de ruta parseados.
    */
-  public layerParameters(): Record<string, any> {
-    return this.layer.parseParameters(this.url);
+  public getlayerParameters(
+    key: string = null,
+  ): Record<string, any> | string | null {
+    const parameters = this.layer.parseParameters(this.url);
+    if (key === null) return parameters;
+
+    return parameters[key] ?? null;
   }
 
   /**
    * Obtiene el cuerpo de la solicitud (datos enviados por el cliente).
    * @returns {Record<string, any>}
    */
-  get getData(): Record<string, any> {
-    return this.data;
+  public getData(key: string = null): Record<string, any> | string | null {
+    if (key === null) return this.data;
+
+    return (this.data[key] as string) ?? null;
   }
 
   /**
