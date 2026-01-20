@@ -1,45 +1,29 @@
-import { HttpMethods } from "enums/methods";
-import { Headers } from "../utils/types";
+import { Request } from "../http/request";
+import { Response } from "../http/response";
 
 /**
- * Interfaz que define el contrato para los adaptadores de servidor.
- * * Establece los métodos necesarios para extraer información de una petición
- * entrante de manera agnóstica a la implementación subyacente (Node.js nativo,
- * Testing mocks, etc.).
+ * Contrato de alto nivel para el motor del servidor.
+ * * Esta interfaz abstrae la complejidad de la red y el protocolo HTTP,
+ * reduciendo la interacción a dos flujos principales: la obtención de una
+ * solicitud estructurada y el despacho de una respuesta procesada.
  * @interface Server
  */
 export interface Server {
   /**
-   * Obtiene la ruta de la solicitud (pathname).
-   * @returns {string} La URL limpia sin parámetros de consulta.
-   * @example "/api/v1/users"
+   * Genera y retorna una instancia de la clase {@link Request} basada
+   * en la información de la conexión actual.
+   * * Este método debe encargarse de normalizar la URL, los métodos,
+   * las cabeceras y procesar el cuerpo de la petición antes de entregarla.
+   * @returns {Request} El objeto de solicitud listo para ser procesado por el router.
    */
-  requestUrl: () => string;
+  getRequest: () => Request;
 
   /**
-   * Obtiene el método HTTP utilizado en la petición.
-   * @returns {HttpMethods} El verbo HTTP normalizado (GET, POST, etc.).
+   * Toma una instancia de la clase {@link Response} y transfiere su estado,
+   * cabeceras y contenido al cliente a través del socket de red subyacente.
+   * @param {Response} response - El objeto que contiene la lógica de respuesta
+   * definida por el desarrollador.
+   * @returns {void}
    */
-  requestMethod: () => HttpMethods;
-
-  /**
-   * Obtiene todas las cabeceras de la solicitud entrante.
-   * @returns {Headers} Objeto con pares clave-valor de las cabeceras.
-   */
-  requestHeaders: () => Headers;
-
-  /**
-   * Recupera y procesa el cuerpo (payload) de la petición.
-   * Habitualmente se utiliza para peticiones POST, PUT o PATCH.
-   * @returns {Record<string, any> | Promise<Record<string, any>>}
-   * Un objeto con los datos procesados (ej. de JSON a objeto JS).
-   */
-  postData(): Record<string, any>;
-
-  /**
-   * Extrae los parámetros de consulta de la URL (query strings).
-   * @returns {Record<string, any>} Objeto con las variables de la URL.
-   * @example Para "?id=10&sort=desc" retorna { id: "10", sort: "desc" }
-   */
-  queryParams: () => Record<string, any>;
+  sendResponse: (response: Response) => void;
 }

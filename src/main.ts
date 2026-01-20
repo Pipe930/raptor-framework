@@ -1,5 +1,5 @@
 import { createServer } from "node:http";
-import { CreateServer } from "./app/createServer";
+import { NodeNativeServer } from "./app/createServer";
 import { Request } from "./http/request";
 import { Router } from "./routes/router";
 import { Response } from "./http/response";
@@ -27,12 +27,17 @@ router.get("/redirect", (request: Request) => {
 });
 
 const httpServer = createServer((req, res) => {
-  const server = new CreateServer(req);
-  const request = Request.from(server);
-  const routeResolve = router.resolve(request);
-  const action = routeResolve.getAction;
-  const response = action(request);
-  server.sendResponse(res, response);
+  const server = new NodeNativeServer(req, res);
+  const request = server.getRequest();
+  try {
+    const routeResolve = router.resolve(request);
+    const action = routeResolve.getAction;
+    const response = action(request);
+    server.sendResponse(response);
+  } catch (error) {
+    console.error(error);
+    res.end("ocurrio un error");
+  }
 });
 
 httpServer.listen(PORT, () =>

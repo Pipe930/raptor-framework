@@ -1,44 +1,30 @@
 import { HttpMethods } from "../enums/methods";
-import { CreateServer } from "../app/createServer";
 import { Headers } from "../utils/types";
+import { Layer } from "../routes/layer";
 
 /**
- * Representa la abstracción de una solicitud HTTP entrante.
- * * Esta clase encapsula todos los datos relevantes de la petición (URL, cabeceras,
- * método, cuerpo y parámetros) proporcionando métodos de acceso controlados.
+ * Representa una solicitud HTTP evolucionada con soporte para resolución de rutas.
+ * * Esta versión permite la mutabilidad controlada de sus propiedades mediante
+ * un patrón de interfaz fluida, facilitando su manipulación en el pipeline del framework.
  */
 export class Request {
-  /**
-   * El constructor es privado para forzar la instanciación a través del método estático `from`.
-   * @param {string} url - La URL completa de la solicitud.
-   * @param {Headers} headers - Objeto que contiene las cabeceras HTTP (clave-valor).
-   * @param {HttpMethods} method - El verbo HTTP de la petición (GET, POST, etc.).
-   * @param {Record<string, any>} data - El cuerpo de la petición (payload) ya procesado.
-   * @param {Record<string, any>} query - Los parámetros de consulta (query strings) de la URL.
-   */
-  private constructor(
-    protected readonly url: string,
-    protected readonly headers: Headers,
-    protected readonly method: HttpMethods,
-    protected readonly data: Record<string, any>,
-    protected readonly query: Record<string, any>,
-  ) {}
+  /** @type {string} Ruta de la solicitud (ej. '/api/users/42') */
+  protected url: string;
 
-  /**
-   * Método de factoría estático que crea una nueva instancia de `Request`
-   * abstrayendo la implementación del servidor nativo.
-   * @param {CreateServer} server - Instancia del servidor que contiene la lógica de extracción de datos.
-   * @returns {Request} Una nueva instancia de la clase Request configurada.
-   */
-  public static from(server: CreateServer): Request {
-    return new Request(
-      server.requestUrl(),
-      server.requestHeaders(),
-      server.requestMethod(),
-      server.postData(),
-      server.queryParams(),
-    );
-  }
+  /** @type {Layer} Capa de ruta asociada que gestiona el matching y parámetros */
+  protected layer: Layer;
+
+  /** @type {Headers} Diccionario de cabeceras HTTP entrantes */
+  protected headers: Headers;
+
+  /** @type {HttpMethods} Verbo HTTP de la petición */
+  protected method: HttpMethods;
+
+  /** @type {Record<string, any>} Cuerpo de la petición procesado (Payload) */
+  protected data: Record<string, any>;
+
+  /** @type {Record<string, any>} Parámetros de consulta (Query Strings) */
+  protected query: Record<string, any>;
 
   /**
    * Obtiene la URL de la solicitud.
@@ -46,6 +32,16 @@ export class Request {
    */
   get getUrl(): string {
     return this.url;
+  }
+
+  /**
+   * Define la URL de la solicitud.
+   * @param {string} url - Nueva URL.
+   * @returns {this} Instancia actual para encadenamiento.
+   */
+  public setUrl(url: string): this {
+    this.url = url;
+    return this;
   }
 
   /**
@@ -57,6 +53,34 @@ export class Request {
   }
 
   /**
+   * Define el método HTTP.
+   * @param {HttpMethods} method - El verbo HTTP (GET, POST, etc.).
+   * @returns {this} Instancia actual.
+   */
+  public setMethod(method: HttpMethods): this {
+    this.method = method;
+    return this;
+  }
+
+  /**
+   * Obtiene la instancia de la capa (Layer) asociada a esta solicitud.
+   * @returns {Layer}
+   */
+  get getLayer(): Layer {
+    return this.layer;
+  }
+
+  /**
+   * Asocia una capa de enrutamiento a la solicitud.
+   * @param {Layer} layer - Instancia de Layer que coincide con la ruta.
+   * @returns {this} Instancia actual.
+   */
+  public setLayer(layer: Layer): this {
+    this.layer = layer;
+    return this;
+  }
+
+  /**
    * Obtiene las cabeceras HTTP de la solicitud.
    * @returns {Headers}
    */
@@ -65,18 +89,57 @@ export class Request {
   }
 
   /**
-   * Recupera los parametros de la url
-   * @returns {string, any}
+   * Define las cabeceras de la petición
+   * @param {Headers} headers - Instancia de las cabeceras
+   * @returns {Headers}
+   */
+  public setHeaders(headers: Headers): this {
+    this.headers = headers;
+    return this;
+  }
+
+  /**
+   * Recupera los parámetros de consulta (query strings) de la URL.
+   * @returns {Record<string, any>} Objeto clave-valor.
    */
   get getParams(): Record<string, any> {
     return this.query;
   }
 
   /**
-   * Recupera el cuerpo de la solicitud (datos enviados por el cliente).
-   * @returns {Record<string, any>} Objeto con los datos del cuerpo de la petición.
+   * Define los parámetros de consulta de la petición.
+   * @param {Record<string, any>} query - Diccionario de parámetros.
+   * @returns {this} Instancia actual.
    */
-  public getData(): Record<string, any> {
+  public setQueryParameters(query: Record<string, any>): this {
+    this.query = query;
+    return this;
+  }
+
+  /**
+   * Extrae y retorna los parámetros dinámicos de la ruta basándose en la Layer asociada.
+   * @example Si la ruta es /user/{id} y la URL es /user/10, devuelve { id: '10' }.
+   * @returns {Record<string, any>} Parámetros de ruta parseados.
+   */
+  public layerParameters(): Record<string, any> {
+    return this.layer.parseParameters(this.url);
+  }
+
+  /**
+   * Obtiene el cuerpo de la solicitud (datos enviados por el cliente).
+   * @returns {Record<string, any>}
+   */
+  get getData(): Record<string, any> {
     return this.data;
+  }
+
+  /**
+   * Define o sobrescribe el cuerpo de la petición.
+   * @param {Record<string, any>} data - Payload de la solicitud.
+   * @returns {this} Instancia actual.
+   */
+  public setData(data: Record<string, any>): this {
+    this.data = data;
+    return this;
   }
 }
