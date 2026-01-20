@@ -65,6 +65,14 @@ export class Request {
   }
 
   /**
+   * Recupera los parametros de la url
+   * @returns {string, any}
+   */
+  get getParams(): Record<string, any> {
+    return this.query;
+  }
+
+  /**
    * Recupera el cuerpo de la solicitud (datos enviados por el cliente).
    * @returns {Record<string, any>} Objeto con los datos del cuerpo de la petición.
    */

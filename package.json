@@ -1,7 +1,7 @@
 {
   "name": "express-typescript",
   "version": "1.0.0",
-  "description": "express project version test",
+  "description": "simple Typescript framework project inspired by express",
   "main": "src/main.ts",
   "scripts": {
     "exec": "ts-node src/main.ts",
@@ -13,8 +13,7 @@
     "build": "tsc",
     "watch": "tsc -w"
   },
-  "keywords": [],
-  "author": "",
+  "author": "Pipe930",
   "license": "ISC",
   "devDependencies": {
     "@jest/globals": "30.2.0",

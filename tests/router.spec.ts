@@ -1,23 +1,12 @@
 import { Router } from "../src/routes/router";
 import { HttpMethods } from "../src/enums/methods";
-import { CreateServer } from "../src/app/createServer";
-import { Request } from "../src/http/request";
+import { createRequestMock } from "./utils";
 
 describe("RouterTest", () => {
   let router: Router;
-  const createServer = (url: string, method: HttpMethods): Request => {
-    const mockCreateServer = {
-      requestUrl: jest.fn().mockReturnValue(url),
-      requestMethod: jest.fn().mockReturnValue(method),
-      requestHeaders: jest.fn().mockReturnValue({ host: "localhost" }),
-      queryParams: jest.fn().mockReturnValue({}),
-      postData: jest.fn().mockResolvedValue({}),
-    } as unknown as jest.Mocked<CreateServer>;
-
-    return Request.from(mockCreateServer);
-  };
 
   beforeEach(() => {
+    jest.clearAllMocks();
     router = new Router();
   });
 
@@ -26,7 +15,9 @@ describe("RouterTest", () => {
     const action = jest.fn();
     router.get(url, action);
 
-    const routerResolve = router.resolve(createServer(url, HttpMethods.get));
+    const routerResolve = router.resolve(
+      createRequestMock(url, HttpMethods.get),
+    );
 
     expect(action).toEqual(routerResolve.getAction);
     expect(url).toBe(routerResolve.getUrl);
@@ -58,18 +49,18 @@ describe("RouterTest", () => {
 
     routes.forEach((route) => {
       expect(route.action).toEqual(
-        router.resolve(createServer(route.url, HttpMethods.get)).getAction,
+        router.resolve(createRequestMock(route.url, HttpMethods.get)).getAction,
       );
 
       expect(route.url).toBe(
-        router.resolve(createServer(route.url, HttpMethods.get)).getUrl,
+        router.resolve(createRequestMock(route.url, HttpMethods.get)).getUrl,
       );
     });
   });
 
   it("should throw if route does not exist", () => {
     expect(() =>
-      router.resolve(createServer("/not-found", HttpMethods.get)),
+      router.resolve(createRequestMock("/not-found", HttpMethods.get)),
     ).toThrow("Route not found");
   });
 
@@ -89,19 +80,19 @@ describe("RouterTest", () => {
     router.delete(url, deleteHandler);
 
     expect(
-      router.resolve(createServer(url, HttpMethods.get)).getAction,
+      router.resolve(createRequestMock(url, HttpMethods.get)).getAction,
     ).toEqual(getHandler);
     expect(
-      router.resolve(createServer(url, HttpMethods.post)).getAction,
+      router.resolve(createRequestMock(url, HttpMethods.post)).getAction,
     ).toEqual(postHandler);
     expect(
-      router.resolve(createServer(url, HttpMethods.put)).getAction,
+      router.resolve(createRequestMock(url, HttpMethods.put)).getAction,
     ).toEqual(putHandler);
     expect(
-      router.resolve(createServer(url, HttpMethods.patch)).getAction,
+      router.resolve(createRequestMock(url, HttpMethods.patch)).getAction,
     ).toEqual(pathHandler);
     expect(
-      router.resolve(createServer(url, HttpMethods.delete)).getAction,
+      router.resolve(createRequestMock(url, HttpMethods.delete)).getAction,
     ).toEqual(deleteHandler);
   });
 });
