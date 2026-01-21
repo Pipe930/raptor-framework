@@ -1,6 +1,6 @@
-import { NodeNativeServer } from "../src/app/createServer";
+import { NodeHttpAdapter } from "../src/http/nodeNativeHttp";
 import { Request } from "../src/http/request";
-import { HttpMethods } from "../src/enums/methods";
+import { HttpMethods } from "../src/http/httpMethods";
 import { IncomingMessage, ServerResponse } from "node:http";
 
 export const createRequestMock = (
@@ -22,7 +22,7 @@ export const createRequestMock = (
     end: jest.fn(),
   };
 
-  const server = new NodeNativeServer(
+  const server = new NodeHttpAdapter(
     mockReq as IncomingMessage,
     mockRes as unknown as ServerResponse,
   );

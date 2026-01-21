@@ -1,5 +1,5 @@
 import { Router } from "../src/routes/router";
-import { HttpMethods } from "../src/enums/methods";
+import { HttpMethods } from "../src/http/httpMethods";
 import { createRequestMock } from "./utils";
 
 describe("RouterTest", () => {

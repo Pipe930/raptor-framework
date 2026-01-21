@@ -1,4 +1,4 @@
-import { RouteHandler } from "utils/types";
+import { RouteHandler } from "../utils/types";
 
 /**
  * Representa una capa de ruta individual dentro del sistema de enrutamiento.
@@ -80,10 +80,10 @@ export class Layer {
 
   /**
    * Extrae los valores de los parámetros dinámicos de una URL real.
-   * * @example
+   * @example
    * // Si la URL es /user/{id} y recibimos /user/42
    * // Retorna: { id: "42" }
-   * * @param {string} url - La URL real de la petición.
+   * @param {string} url - La URL real de la petición.
    * @returns {Record<string, string>} Un objeto clave-valor con los parámetros extraídos.
    */
   public parseParameters(url: string): Record<string, string> {

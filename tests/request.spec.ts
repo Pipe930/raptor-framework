@@ -1,5 +1,5 @@
 import { Request } from "../src/http/request";
-import { HttpMethods } from "../src/enums/methods";
+import { HttpMethods } from "../src/http/httpMethods";
 import { Layer } from "../src/routes/layer";
 
 describe("RequestTest", () => {

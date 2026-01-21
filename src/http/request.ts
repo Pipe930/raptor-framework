@@ -1,5 +1,5 @@
-import { HttpMethods } from "../enums/methods";
-import { Headers } from "../utils/types";
+import { HttpMethods } from "./httpMethods";
+import { Headers, HttpValue } from "../utils/types";
 import { Layer } from "../routes/layer";
 
 /**
@@ -21,10 +21,10 @@ export class Request {
   protected method: HttpMethods;
 
   /** @type {Record<string, any>} Cuerpo de la petición procesado (Payload) */
-  protected data: Record<string, any>;
+  protected data: Record<string, any> = {};
 
   /** @type {Record<string, any>} Parámetros de consulta (Query Strings) */
-  protected query: Record<string, any>;
+  protected query: Record<string, any> = {};
 
   /**
    * Obtiene la URL de la solicitud.
@@ -102,7 +102,7 @@ export class Request {
    * Recupera los parámetros de consulta (query strings) de la URL.
    * @returns {Record<string, any>} Objeto clave-valor.
    */
-  public getParams(key: string = null): Record<string, any> | string | null {
+  public getParams(key: string = null): HttpValue {
     if (key === null) return this.query;
 
     return (this.query[key] as string) ?? null;
@@ -123,9 +123,7 @@ export class Request {
    * @example Si la ruta es /user/{id} y la URL es /user/10, devuelve { id: '10' }.
    * @returns {Record<string, any>} Parámetros de ruta parseados.
    */
-  public getlayerParameters(
-    key: string = null,
-  ): Record<string, any> | string | null {
+  public getlayerParameters(key: string = null): HttpValue {
     const parameters = this.layer.parseParameters(this.url);
     if (key === null) return parameters;
 
@@ -136,7 +134,7 @@ export class Request {
    * Obtiene el cuerpo de la solicitud (datos enviados por el cliente).
    * @returns {Record<string, any>}
    */
-  public getData(key: string = null): Record<string, any> | string | null {
+  public getData(key: string = null): HttpValue {
     if (key === null) return this.data;
 
     return (this.data[key] as string) ?? null;

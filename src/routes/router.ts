@@ -1,5 +1,5 @@
 import { HashMapRouters, RouteHandler } from "../utils/types";
-import { HttpMethods } from "../enums/methods";
+import { HttpMethods } from "../http/httpMethods";
 import { Request } from "../http/request";
 import { Layer } from "./layer";
 import { HttpNotFoundException } from "../exceptions/httpNotFoundException";
