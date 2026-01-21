@@ -7,7 +7,7 @@
     "exec": "ts-node public/main.ts",
     "lint": "eslint \"{src,tests}/**/*.ts\" --fix",
     "dev": "NODE_ENV=development nodemon public/main.ts",
-    "test": "NODE_ENV=tst jest --verbose",
+    "test": "NODE_ENV=test jest --verbose",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "build": "tsc",
