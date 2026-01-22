@@ -1,6 +1,7 @@
 import { Request } from "../src/http/request";
 import { HttpMethods } from "../src/http/httpMethods";
 import { Layer } from "../src/routes/layer";
+import { Response } from "../src/http/response";
 
 describe("RequestTest", () => {
   it("should request returns data obtained from server correctly", () => {
@@ -51,8 +52,9 @@ describe("RequestTest", () => {
   });
 
   it("should queries returns value if key is given", () => {
-    const layer = new Layer("/test/{param}/param/{bar}", () => "test");
-
+    const layer = new Layer("/test/{param}/param/{bar}", () =>
+      Response.text("holamundo"),
+    );
     const request = new Request().setLayer(layer).setUrl("/test/2/param/1");
 
     expect(request.getlayerParameters("param")).toBe("2");

@@ -15,7 +15,7 @@ describe("RouterTest", () => {
     const action = jest.fn();
     router.get(url, action);
 
-    const routerResolve = router.resolve(
+    const routerResolve = router.resolveLayer(
       createRequestMock(url, HttpMethods.get),
     );
 
@@ -49,18 +49,20 @@ describe("RouterTest", () => {
 
     routes.forEach((route) => {
       expect(route.action).toEqual(
-        router.resolve(createRequestMock(route.url, HttpMethods.get)).getAction,
+        router.resolveLayer(createRequestMock(route.url, HttpMethods.get))
+          .getAction,
       );
 
       expect(route.url).toBe(
-        router.resolve(createRequestMock(route.url, HttpMethods.get)).getUrl,
+        router.resolveLayer(createRequestMock(route.url, HttpMethods.get))
+          .getUrl,
       );
     });
   });
 
   it("should throw if route does not exist", () => {
     expect(() =>
-      router.resolve(createRequestMock("/not-found", HttpMethods.get)),
+      router.resolveLayer(createRequestMock("/not-found", HttpMethods.get)),
     ).toThrow("Route not found");
   });
 
@@ -80,19 +82,19 @@ describe("RouterTest", () => {
     router.delete(url, deleteHandler);
 
     expect(
-      router.resolve(createRequestMock(url, HttpMethods.get)).getAction,
+      router.resolveLayer(createRequestMock(url, HttpMethods.get)).getAction,
     ).toEqual(getHandler);
     expect(
-      router.resolve(createRequestMock(url, HttpMethods.post)).getAction,
+      router.resolveLayer(createRequestMock(url, HttpMethods.post)).getAction,
     ).toEqual(postHandler);
     expect(
-      router.resolve(createRequestMock(url, HttpMethods.put)).getAction,
+      router.resolveLayer(createRequestMock(url, HttpMethods.put)).getAction,
     ).toEqual(putHandler);
     expect(
-      router.resolve(createRequestMock(url, HttpMethods.patch)).getAction,
+      router.resolveLayer(createRequestMock(url, HttpMethods.patch)).getAction,
     ).toEqual(pathHandler);
     expect(
-      router.resolve(createRequestMock(url, HttpMethods.delete)).getAction,
+      router.resolveLayer(createRequestMock(url, HttpMethods.delete)).getAction,
     ).toEqual(deleteHandler);
   });
 });
