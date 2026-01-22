@@ -7,7 +7,7 @@ import { Layer } from "../src/routes/layer";
 
 const PORT = 3000;
 
-const app = App.getInstance;
+const app = App.getInstance();
 
 app.router.get("/test/{param}", (request: Request) => {
   return Response.json(request.getlayerParameters());

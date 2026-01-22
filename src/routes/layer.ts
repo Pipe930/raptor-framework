@@ -67,23 +67,14 @@ export class Layer {
     this.action = action;
   }
 
-  /**
-   * Obtiene la plantilla original de la URL
-   */
   get getUrl(): string {
     return this.url;
   }
 
-  /**
-   * Obtiene el handler/controlador de esta ruta
-   */
   get getAction(): RouteHandler {
     return this.action;
   }
 
-  /**
-   * Obtiene la lista de middlewares asociados
-   */
   get getMiddlewares(): Middleware[] {
     return this.middlewares;
   }

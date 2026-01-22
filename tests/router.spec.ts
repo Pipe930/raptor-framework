@@ -1,6 +1,9 @@
 import { Router } from "../src/routes/router";
 import { HttpMethods } from "../src/http/httpMethods";
 import { createRequestMock } from "./utils";
+import { NextFunction } from "../src/utils/types";
+import { Request } from "../src/http/request";
+import { Response } from "../src/http/response";
 
 describe("RouterTest", () => {
   let router: Router;
@@ -96,5 +99,36 @@ describe("RouterTest", () => {
     expect(
       router.resolveLayer(createRequestMock(url, HttpMethods.delete)).getAction,
     ).toEqual(deleteHandler);
+  });
+
+  it("should valid run middlewares", () => {
+    const middleware1 = class {
+      public handle(request: Request, next: NextFunction): Response {
+        const response = next(request);
+        response.setHeader("x-test-one", "one");
+        return response;
+      }
+    };
+
+    const middleware2 = class {
+      public handle(request: Request, next: NextFunction): Response {
+        const response = next(request);
+        response.setHeader("x-test-two", "two");
+        return response;
+      }
+    };
+
+    const responseExcepted = Response.text("hola");
+    const url = "/test/hola";
+
+    router
+      .get(url, (request: Request) => responseExcepted)
+      .setMiddlewares([middleware1, middleware2]);
+
+    const response = router.resolve(createRequestMock(url, HttpMethods.get));
+
+    expect(responseExcepted).toBe(response);
+    expect(response.getHeaders["x-test-one"]).toBe("one");
+    expect(response.getHeaders["x-test-two"]).toBe("two");
   });
 });

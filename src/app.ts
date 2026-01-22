@@ -23,9 +23,10 @@ import { NodeServer } from "./server/nodeNativeServer";
  * el uso de {@link HttpAdapter} y {@link Server}.
  */
 export class App {
-  /** Instancia única del kernel de la aplicación */
-  static instance: App;
-
+  /**
+   * Instancia única de la aplicación (Singleton).
+   */
+  private static instance: App;
   /**
    * Sistema de enrutamiento principal.
    * Responsable de registrar y resolver las rutas definidas por el usuario.
@@ -43,9 +44,30 @@ export class App {
     this.server = new NodeServer(this);
   }
 
-  public static get getInstance(): App {
+  /**
+   * Obtiene la instancia única de la aplicación.
+   * Si no existe, la crea; si ya existe, devuelve la existente.
+   *
+   * @returns {App} La instancia única de la aplicación.
+   *
+   * @example
+   * const app = App.getInstance();
+   * app.router.get('/users', handler);
+   */
+  public static getInstance(): App {
     if (!App.instance) App.instance = new App();
     return App.instance;
+  }
+
+  /**
+   * Método opcional para resetear la instancia.
+   * Útil principalmente en tests o en casos donde necesitas
+   * reiniciar completamente la aplicación.
+   *
+   * ⚠️ Usar con precaución en producción.
+   */
+  public static resetInstance(): void {
+    App.instance = null;
   }
 
   /**

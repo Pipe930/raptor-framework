@@ -39,76 +39,37 @@ export class Request {
   /** Parámetros de query string */
   protected query: Record<string, any> = {};
 
-  /**
-   * Obtiene la URL de la solicitud.
-   *
-   * @example
-   * request.getUrl; // "/users/10"
-   */
   get getUrl(): string {
     return this.url;
   }
 
-  /**
-   * Define la URL de la solicitud.
-   * Usado exclusivamente por el HttpAdapter.
-   */
   public setUrl(url: string): this {
     this.url = url;
     return this;
   }
 
-  /**
-   * Obtiene el método HTTP.
-   *
-   * @example
-   * if (request.getMethod === HttpMethods.post) { ... }
-   */
   get getMethod(): HttpMethods {
     return this.method;
   }
 
-  /**
-   * Define el método HTTP.
-   * Usado por el HttpAdapter.
-   */
   public setMethod(method: HttpMethods): this {
     this.method = method;
     return this;
   }
 
-  /**
-   * Obtiene la Layer asociada (ruta resuelta).
-   *
-   * Permite acceder a información estructural de la ruta.
-   */
   get getLayer(): Layer {
     return this.layer;
   }
 
-  /**
-   * Asocia la capa de enrutamiento.
-   * Este paso ocurre después del resolve del Router.
-   */
   public setLayer(layer: Layer): this {
     this.layer = layer;
     return this;
   }
 
-  /**
-   * Obtiene las cabeceras HTTP entrantes.
-   *
-   * @example
-   * const token = request.getHeaders["authorization"];
-   */
   get getHeaders(): Headers {
     return this.headers;
   }
 
-  /**
-   * Define las cabeceras de la petición.
-   * Usado por el HttpAdapter.
-   */
   public setHeaders(headers: Headers): this {
     this.headers = headers;
     return this;
@@ -127,10 +88,6 @@ export class Request {
     return (this.query[key] as string) ?? null;
   }
 
-  /**
-   * Define los parámetros de query.
-   * Usado por el HttpAdapter.
-   */
   public setQueryParameters(query: Record<string, any>): this {
     this.query = query;
     return this;
@@ -167,10 +124,6 @@ export class Request {
     return (this.data[key] as string) ?? null;
   }
 
-  /**
-   * Define el cuerpo de la petición.
-   * Usado por el HttpAdapter tras parsear el stream.
-   */
   public setData(data: Record<string, any>): this {
     this.data = data;
     return this;

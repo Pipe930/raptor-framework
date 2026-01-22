@@ -32,49 +32,24 @@ export class Response {
    */
   protected content?: string = null;
 
-  /**
-   * Obtiene el código de estado HTTP actual.
-   */
   get getStatus(): number {
     return this.status;
   }
 
-  /**
-   * Define el código de estado HTTP.
-   *
-   * @example
-   * return Response.text("Created").setStatus(201);
-   */
   public setStatus(newStatus: number): this {
     this.status = newStatus;
     return this;
   }
 
-  /**
-   * Obtiene todas las cabeceras configuradas.
-   */
   get getHeaders(): Headers {
     return this.headers;
   }
 
-  /**
-   * Agrega o actualiza una cabecera HTTP.
-   *
-   * @example
-   * return Response.text("OK")
-   *   .setHeader("x-powered-by", "MyFramework");
-   */
   public setHeader(header: string, value: string): this {
     this.headers[header] = value;
     return this;
   }
 
-  /**
-   * Elimina una cabecera específica.
-   *
-   * @example
-   * response.removeHeader("x-debug");
-   */
   public removeHeader(header: string): void {
     delete this.headers[header];
   }
@@ -92,19 +67,10 @@ export class Response {
     return this;
   }
 
-  /**
-   * Obtiene el contenido del cuerpo.
-   */
   get getContent(): string | null {
     return this.content;
   }
 
-  /**
-   * Define el cuerpo de la respuesta.
-   *
-   * @example
-   * return new Response().setContent("Hello world");
-   */
   public setContent(content: string): this {
     this.content = content;
     return this;
