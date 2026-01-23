@@ -131,4 +131,32 @@ describe("RouterTest", () => {
     expect(response.getHeaders["x-test-one"]).toBe("one");
     expect(response.getHeaders["x-test-two"]).toBe("two");
   });
+
+  it("should middleware stack can be stopped", () => {
+    const middlewareStopped = class {
+      public handle(request: Request, next: NextFunction): Response {
+        return Response.text("stopped");
+      }
+    };
+
+    const middleware2 = class {
+      public handle(request: Request, next: NextFunction): Response {
+        const response = next(request);
+        response.setHeader("x-test-two", "two");
+        return response;
+      }
+    };
+
+    const responseExcepted = Response.text("Unreachable");
+    const url = "/test/hola";
+
+    router
+      .get(url, (request: Request) => responseExcepted)
+      .setMiddlewares([middlewareStopped, middleware2]);
+
+    const response = router.resolve(createRequestMock(url, HttpMethods.get));
+
+    expect("stopped").toBe(response.getContent);
+    expect(response.getHeaders["x-test-two"]).toBeUndefined();
+  });
 });
