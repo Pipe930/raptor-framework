@@ -7,7 +7,7 @@ import { Layer } from "../src/routes/layer";
 
 const PORT = 3000;
 
-const app = App.getInstance;
+const app = App.bootstrap();
 
 app.router.get("/test/{param}", (request: Request) => {
   return Response.json(request.getlayerParameters());
@@ -36,7 +36,6 @@ app.router.get("/home", (request: Request) => {
       },
     },
     "main",
-    app,
   );
 });
 

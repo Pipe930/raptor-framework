@@ -6,6 +6,7 @@ import { Server } from "./server/server";
 import { NodeServer } from "./server/nodeNativeServer";
 import { View } from "./views/view";
 import { RaptorEngine } from "./views/raptorEngine";
+import { Container } from "./container/container";
 
 /**
  * La clase App actúa como el *kernel de ejecución* y *orquestador del ciclo de vida*
@@ -26,10 +27,6 @@ import { RaptorEngine } from "./views/raptorEngine";
  */
 export class App {
   /**
-   * Instancia única de la aplicación (Singleton).
-   */
-  private static instance: App;
-  /**
    * Sistema de enrutamiento principal.
    * Responsable de registrar y resolver las rutas definidas por el usuario.
    */
@@ -41,38 +38,44 @@ export class App {
    */
   private server: Server;
 
-  public engineTemplate: View;
-
-  private constructor() {
-    this.router = new Router();
-    this.server = new NodeServer(this);
-    this.engineTemplate = new RaptorEngine("./views");
-  }
+  /**
+   * Motor de vistas responsable del renderizado de plantillas.
+   *
+   * Permite separar la lógica de presentación del dominio
+   * de aplicación mediante motores como {@link RaptorEngine}.
+   *
+   * Es utilizado típicamente dentro de los controladores
+   * para generar respuestas HTML.
+   */
+  public view: View;
 
   /**
-   * Obtiene la instancia única de la aplicación.
-   * Si no existe, la crea; si ya existe, devuelve la existente.
+   * Inicializa y configura la aplicación.
    *
-   * @returns {App} La instancia única de la aplicación.
+   * Este método actúa como el *Composition Root* del framework:
+   * es el único lugar donde se instancian y se conectan
+   * las implementaciones concretas de la infraestructura.
    *
-   * @example
-   * const app = App.getInstance();
-   * app.router.get('/users', handler);
+   * Responsabilidades:
+   * - Crear la instancia singleton de la aplicación.
+   * - Registrar el sistema de enrutamiento.
+   * - Configurar el servidor HTTP subyacente.
+   * - Inicializar el motor de vistas.
+   *
+   * A partir de este punto, el resto del sistema debe
+   * depender únicamente de abstracciones (interfaces),
+   * nunca de implementaciones concretas.
+   *
+   * @returns {App} Retorna la instancia de la clase
    */
-  public static get getInstance(): App {
-    if (!App.instance) App.instance = new App();
-    return App.instance;
-  }
+  public static bootstrap(): App {
+    const app = Container.singleton(App);
 
-  /**
-   * Método opcional para resetear la instancia.
-   * Útil principalmente en tests o en casos donde necesitas
-   * reiniciar completamente la aplicación.
-   *
-   * ⚠️ Usar con precaución en producción.
-   */
-  public static resetInstance(): void {
-    App.instance = null;
+    app.router = new Router();
+    app.server = new NodeServer(app);
+    app.view = new RaptorEngine(__dirname + "/../views");
+
+    return app;
   }
 
   /**

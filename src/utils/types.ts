@@ -11,3 +11,4 @@ export type HttpValue = Record<string, unknown> | string | null;
 export type NextFunction = (request: Request) => Response;
 export type HelperFunction = (...args: unknown[]) => string;
 export type TemplateContext = Record<string, unknown>;
+export type Constructor<T = unknown> = new (...args: unknown[]) => T;

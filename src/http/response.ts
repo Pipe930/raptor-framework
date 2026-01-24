@@ -1,3 +1,4 @@
+import { Container } from "../container/container";
 import { App } from "../app";
 import { Headers, TemplateContext } from "../utils/types";
 
@@ -141,13 +142,43 @@ export class Response {
     return new this().setStatus(302).setHeader("location", url);
   }
 
+  /**
+   * Genera una respuesta HTTP de tipo text/html.
+   *
+   * Este método actúa como un *facade* entre el motor de vistas
+   * y el sistema de respuestas HTTP del framework.
+   *
+   * Responsabilidades:
+   * - Resolver la instancia global de la aplicación.
+   * - Delegar el renderizado al motor de vistas configurado.
+   * - Envolver el resultado en un objeto {@link Response}
+   *   con tipo de contenido `text/html`.
+   *
+   * Permite a los controladores retornar vistas de forma declarativa:
+   *
+   * @example
+   * return Response.view("users/profile", { user });
+   *
+   * @example
+   * return Response.view("auth/login", {}, "auth");
+   *
+   * @param {string} view - Nombre lógico de la vista a renderizar
+   * (sin extensión ni ruta base).
+   *
+   * @param {TemplateContext} params - Variables que se inyectan
+   * en la plantilla.
+   *
+   * @param {string | null} layout - Layout a utilizar. Si es `null`,
+   * se usa el layout por defecto configurado en el motor de vistas.
+   *
+   * @returns {Response} Respuesta HTTP lista para ser enviada al cliente.
+   */
   public static view(
     view: string,
     params: TemplateContext,
     layout: string = null,
-    app: App,
   ): Response {
-    const content = app.engineTemplate.render(view, params, layout);
+    const content = Container.resolve(App).view.render(view, params, layout);
 
     return new this().setContentType("text/html").setContent(content);
   }
