@@ -14,6 +14,8 @@ export default defineConfig(
       "package-lock.json",
       "node_modules",
       "dist",
+      "coverage",
+      "jest.config.ts",
     ],
     languageOptions: {
       globals: {

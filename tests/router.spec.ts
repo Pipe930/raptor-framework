@@ -13,20 +13,19 @@ describe("RouterTest", () => {
     router = new Router();
   });
 
-  it("should resolve basic route with callback action", () => {
+  it("should resolve basic route with callback action", async () => {
     const url = "/test";
     const action = jest.fn();
     router.get(url, action);
 
-    const routerResolve = router.resolveLayer(
-      createRequestMock(url, HttpMethods.get),
-    );
+    const requestMock = await createRequestMock(url, HttpMethods.get);
+    const routerResolve = router.resolveLayer(requestMock);
 
     expect(action).toEqual(routerResolve.getAction);
     expect(url).toBe(routerResolve.getUrl);
   });
 
-  it("should resolve multiple basic routees with callback actions", () => {
+  it("should resolve multiple basic routees with callback actions", async () => {
     const routes = [
       {
         url: "/posts",
@@ -50,26 +49,23 @@ describe("RouterTest", () => {
       router.get(route.url, route.action);
     });
 
-    routes.forEach((route) => {
-      expect(route.action).toEqual(
-        router.resolveLayer(createRequestMock(route.url, HttpMethods.get))
-          .getAction,
-      );
+    for (const route of routes) {
+      const requestMock = await createRequestMock(route.url, HttpMethods.get);
+      expect(route.action).toEqual(router.resolveLayer(requestMock).getAction);
+    }
 
-      expect(route.url).toBe(
-        router.resolveLayer(createRequestMock(route.url, HttpMethods.get))
-          .getUrl,
-      );
-    });
+    for (const route of routes) {
+      const requestMock = await createRequestMock(route.url, HttpMethods.get);
+      expect(route.url).toBe(router.resolveLayer(requestMock).getUrl);
+    }
   });
 
-  it("should throw if route does not exist", () => {
-    expect(() =>
-      router.resolveLayer(createRequestMock("/not-found", HttpMethods.get)),
-    ).toThrow("Route not found");
+  it("should throw if route does not exist", async () => {
+    const requestMock = await createRequestMock("/not-found", HttpMethods.get);
+    expect(() => router.resolveLayer(requestMock)).toThrow("Route not found");
   });
 
-  it("should not mix routes between methods", () => {
+  it("should not mix routes between methods", async () => {
     const url = "/posts";
 
     const getHandler = jest.fn();
@@ -84,24 +80,24 @@ describe("RouterTest", () => {
     router.patch(url, pathHandler);
     router.delete(url, deleteHandler);
 
-    expect(
-      router.resolveLayer(createRequestMock(url, HttpMethods.get)).getAction,
-    ).toEqual(getHandler);
-    expect(
-      router.resolveLayer(createRequestMock(url, HttpMethods.post)).getAction,
-    ).toEqual(postHandler);
-    expect(
-      router.resolveLayer(createRequestMock(url, HttpMethods.put)).getAction,
-    ).toEqual(putHandler);
-    expect(
-      router.resolveLayer(createRequestMock(url, HttpMethods.patch)).getAction,
-    ).toEqual(pathHandler);
-    expect(
-      router.resolveLayer(createRequestMock(url, HttpMethods.delete)).getAction,
-    ).toEqual(deleteHandler);
+    const requestMockGet = await createRequestMock(url, HttpMethods.get);
+    const requestMockPost = await createRequestMock(url, HttpMethods.post);
+    const requestMockPut = await createRequestMock(url, HttpMethods.put);
+    const requestMockPatch = await createRequestMock(url, HttpMethods.patch);
+    const requestMockDelete = await createRequestMock(url, HttpMethods.delete);
+
+    expect(router.resolveLayer(requestMockGet).getAction).toEqual(getHandler);
+    expect(router.resolveLayer(requestMockPost).getAction).toEqual(postHandler);
+    expect(router.resolveLayer(requestMockPut).getAction).toEqual(putHandler);
+    expect(router.resolveLayer(requestMockPatch).getAction).toEqual(
+      pathHandler,
+    );
+    expect(router.resolveLayer(requestMockDelete).getAction).toEqual(
+      deleteHandler,
+    );
   });
 
-  it("should valid run middlewares", () => {
+  it("should valid run middlewares", async () => {
     const middleware1 = class {
       public handle(request: Request, next: NextFunction): Response {
         const response = next(request);
@@ -125,14 +121,15 @@ describe("RouterTest", () => {
       .get(url, (request: Request) => responseExcepted)
       .setMiddlewares([middleware1, middleware2]);
 
-    const response = router.resolve(createRequestMock(url, HttpMethods.get));
+    const requestMock = await createRequestMock(url, HttpMethods.get);
+    const response = router.resolve(requestMock);
 
     expect(responseExcepted).toBe(response);
     expect(response.getHeaders["x-test-one"]).toBe("one");
     expect(response.getHeaders["x-test-two"]).toBe("two");
   });
 
-  it("should middleware stack can be stopped", () => {
+  it("should middleware stack can be stopped", async () => {
     const middlewareStopped = class {
       public handle(request: Request, next: NextFunction): Response {
         return Response.text("stopped");
@@ -154,7 +151,8 @@ describe("RouterTest", () => {
       .get(url, (request: Request) => responseExcepted)
       .setMiddlewares([middlewareStopped, middleware2]);
 
-    const response = router.resolve(createRequestMock(url, HttpMethods.get));
+    const requestMock = await createRequestMock(url, HttpMethods.get);
+    const response = router.resolve(requestMock);
 
     expect("stopped").toBe(response.getContent);
     expect(response.getHeaders["x-test-two"]).toBeUndefined();
