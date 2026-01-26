@@ -23,7 +23,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
    * Registro interno de helpers disponibles en las plantillas.
    * La clave es el nombre del helper y el valor es la función ejecutable.
    */
-  private helpers: Map<string, HelperFunction> = new Map();
+  private helpers = new Map<string, HelperFunction>();
   /**
    * Directorio base donde se encuentran las vistas y partials.
    * Ejemplo: /views

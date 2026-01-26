@@ -3,6 +3,25 @@
   "version": "1.0.0",
   "description": "simple Typescript framework project inspired by express",
   "main": "public/main.ts",
+  "keywords": [
+    "typescript",
+    "javascript",
+    "node",
+    "nodejs",
+    "express",
+    "nestjs",
+    "framework",
+    "library"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Pipe930/raptor-framework"
+  },
+  "bugs": {
+    "url": "https://github.com/Pipe930/raptor-framework/issues"
+  },
+  "homepage": "https://github.com/Pipe930/raptor-framework#readme",
+  "packageManager": "pnpm@10.28.2",
   "scripts": {
     "exec": "ts-node public/main.ts",
     "lint": "eslint \"{src,tests}/**/*.ts\" --fix",
