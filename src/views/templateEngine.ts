@@ -266,8 +266,22 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa bloques condicionales con un contexto personalizado.
-   * Versión que acepta contexto (usado dentro de #each).
+   * Procesa bloques condicionales usando un contexto específico.
+   *
+   * Esta variante es utilizada dentro de bloques `#each`, donde el contexto
+   * incluye variables especiales como `this`, `@index`, `@first` y `@last`.
+   *
+   * @param template Fragmento de plantilla a procesar.
+   * @param context Contexto específico del elemento iterado.
+   *
+   * @returns Fragmento de plantilla con el bloque `#if` resuelto.
+   *
+   * Sintaxis soportada:
+   * {{#if condition}}
+   *   contenido verdadero
+   * {{else}}
+   *   contenido falso
+   * {{/if}}
    */
   private processIfWithContext(
     template: string,
@@ -293,8 +307,19 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa helpers con un contexto personalizado.
-   * Versión que acepta contexto (usado dentro de #each).
+   * Procesa helpers usando un contexto específico.
+   *
+   * Esta versión se ejecuta dentro de bloques `#each` para permitir
+   * que los helpers accedan a:
+   *
+   * - `this`
+   * - `this.prop`
+   * - `@index`, `@first`, `@last`
+   *
+   * @param template Fragmento de plantilla.
+   * @param context Contexto específico del bloque iterado.
+   *
+   * @returns Fragmento de plantilla con los helpers evaluados.
    */
   private processHelpersWithContext(
     template: string,
@@ -321,7 +346,21 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Versión de processInterpolation que acepta un contexto personalizado.
+   * Procesa interpolaciones usando un contexto personalizado.
+   *
+   * Esta variante se usa dentro de `#each` para resolver correctamente:
+   * - `this`
+   * - `this.prop`
+   * - Variables especiales (`@index`, etc.)
+   *
+   * Soporta:
+   * - Interpolación con escape: {{ variable }}
+   * - Interpolación sin escape: {{{ variable }}}
+   *
+   * @param template Fragmento de plantilla.
+   * @param context Contexto específico del bloque.
+   *
+   * @returns Fragmento de plantilla interpolado.
    */
   private processInterpolationWithContext(
     template: string,
@@ -427,7 +466,22 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Parsea los argumentos de un helper respetando strings con comillas.
+   * Parsea los argumentos de un helper.
+   *
+   * Soporta:
+   * - Strings entre comillas
+   * - Números
+   * - Booleanos
+   * - null
+   * - Paths del contexto (ej: user.name)
+   *
+   * Ejemplo:
+   * {{ truncate post.content 100 }}
+   *
+   * @param argsString Cadena de argumentos crudos del helper.
+   * @param context Contexto actual de renderizado.
+   *
+   * @returns Lista de argumentos ya parseados y tipados.
    */
   private parseHelperArgs(
     argsString: string,
@@ -459,6 +513,21 @@ export class SimpleTemplateEngine implements TemplateEngine {
     return args;
   }
 
+  /**
+   * Parsea un argumento individual de un helper.
+   *
+   * Reglas de parsing:
+   * - "texto" → string
+   * - 123 → number
+   * - true / false → boolean
+   * - null → null
+   * - path → resolución desde el contexto
+   *
+   * @param arg Argumento crudo.
+   * @param context Contexto actual.
+   *
+   * @returns Valor parseado.
+   */
   private parseArgument(arg: string, context: TemplateContext): unknown {
     if (arg.startsWith('"') && arg.endsWith('"')) return arg.slice(1, -1);
     if (!isNaN(Number(arg)) && arg !== "") return Number(arg);
@@ -515,16 +584,17 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Resuelve un path en el contexto.
-   *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
+   * Resuelve un path dot-notation dentro del contexto.
    *
    * Convierte:
    * "user.profile.name"
    * en:
    * context.user.profile.name
+   *
+   * @param path Ruta a resolver.
+   * @param context Contexto base.
+   *
+   * @returns Valor encontrado o `undefined` si no existe.
    */
   private resolveValue(path: string, context: TemplateContext): unknown {
     const parts = path.split(".");
@@ -558,10 +628,18 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Escapa caracteres HTML para prevenir XSS.
+   * Escapa caracteres HTML peligrosos para prevenir XSS.
    *
-   * @param text Texto del HTML a parsear
-   * @returns Devuelve los valores parseados
+   * Caracteres escapados:
+   * - &
+   * - <
+   * - >
+   * - "
+   * - '
+   *
+   * @param text Texto original.
+   *
+   * @returns Texto seguro para renderizar en HTML.
    */
   private escapeHtml(text: string): string {
     const map: Record<string, string> = {
