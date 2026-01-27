@@ -20,7 +20,7 @@ describe("JsonParser", () => {
   });
 
   it("should return string when body is string", async () => {
-    const body = "Hello world";
+    const body = "hola mundo";
     const result = await parser.parse(body);
 
     expect(result).toBe(body);
