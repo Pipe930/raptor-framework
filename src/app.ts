@@ -93,7 +93,7 @@ export class App {
   public async handle(adapter: HttpAdapter): Promise<void> {
     try {
       const request = await adapter.getRequest();
-      const response = this.router.resolve(request);
+      const response = await this.router.resolve(request);
 
       adapter.sendResponse(response);
     } catch (err) {

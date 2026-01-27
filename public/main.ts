@@ -40,14 +40,14 @@ app.router.get("/home", (request: Request) => {
 });
 
 class AuthMiddleware implements Middleware {
-  public handle(request: Request, next: NextFunction): Response {
+  public async handle(request: Request, next: NextFunction): Promise<Response> {
     if (request.getHeaders["authorization"] !== "test") {
       return Response.json({
         message: "NotAuthenticated",
       }).setStatus(401);
     }
 
-    return next(request);
+    return await next(request);
   }
 }
 

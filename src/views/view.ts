@@ -15,7 +15,11 @@ export interface View {
    * @example
    * view.render("home", { user: { name: "Felipe" } }, "main");
    */
-  render(view: string, params: TemplateContext, layout: string): string;
+  render(
+    view: string,
+    params: TemplateContext,
+    layout: string,
+  ): string | Promise<string>;
 }
 
 /**
@@ -36,5 +40,5 @@ export interface TemplateEngine {
    * engine.render("Hola {{ name }}", { name: "Felipe" });
    * // => "Hola Felipe"
    */
-  render(template: string, params: TemplateContext): string;
+  render(template: string, params: TemplateContext): Promise<string>;
 }

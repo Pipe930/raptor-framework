@@ -14,7 +14,7 @@ import { IncomingHttpHeaders } from "node:http";
  *   return Response.json({ message: "Hello world" });
  * };
  */
-export type RouteHandler = (request: Request) => Response;
+export type RouteHandler = (request: Request) => Promise<Response> | Response;
 
 /**
  * Estructura de almacenamiento de todas las rutas del framework.
@@ -71,7 +71,7 @@ export type HttpValue = Record<string, unknown> | string | null;
  * 2. Invocar a `next(request)` para delegar
  *    al siguiente middleware.
  */
-export type NextFunction = (request: Request) => Response;
+export type NextFunction = (request: Request) => Response | Promise<Response>;
 
 /**
  * Función helper para motores de plantillas.

@@ -1,7 +1,7 @@
 import { View } from "./view";
 import { SimpleTemplateEngine } from "./templateEngine";
-import { existsSync, readFileSync } from "fs";
-import { join } from "path";
+import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { FileExistsException } from "../exceptions/fileExistsException";
 import { HelperFunction, TemplateContext } from "../utils/types";
 
@@ -60,6 +60,12 @@ export class RaptorEngine implements View {
   private templateEngine: SimpleTemplateEngine;
 
   /**
+   * Cache en memoria de archivos HTML.
+   * Evita leer del disco en cada request.
+   */
+  private cacheTemplates = new Map<string, string>();
+
+  /**
    * Crea una instancia del motor de vistas.
    *
    * @param viewsDirectory Directorio raíz de las vistas.
@@ -94,13 +100,13 @@ export class RaptorEngine implements View {
    * /views/home.html
    * /views/layouts/main.html
    */
-  public render(
+  public async render(
     view: string,
     params: TemplateContext = {},
     layout: string | null = null,
-  ): string {
-    const layoutContent = this.renderLayout(layout ?? this.defaultLayout);
-    const viewContent = this.renderView(view, params);
+  ): Promise<string> {
+    const layoutContent = await this.renderLayout(layout ?? this.defaultLayout);
+    const viewContent = await this.renderView(view, params);
 
     return layoutContent.replace(this.contentAnnotation, viewContent);
   }
@@ -116,7 +122,10 @@ export class RaptorEngine implements View {
    * renderView("profile")
    * -> /views/profile.html
    */
-  private renderView(view: string, params: TemplateContext = {}): string {
+  private async renderView(
+    view: string,
+    params: TemplateContext = {},
+  ): Promise<string> {
     const viewPath = join(this.viewsDirectory, `${view}.html`);
     return this.renderFile(viewPath, params);
   }
@@ -132,7 +141,7 @@ export class RaptorEngine implements View {
    * -> /views/layouts/main.html
    */
 
-  private renderLayout(layout: string): string {
+  private async renderLayout(layout: string): Promise<string> {
     const layoutPath = join(this.viewsDirectory, "layouts", `${layout}.html`);
     return this.renderFile(layoutPath);
   }
@@ -145,12 +154,23 @@ export class RaptorEngine implements View {
    * @returns Devuelve el arvhivo HTML encontrado renderizado
    * @throws FileExistsException si el archivo no existe.
    */
-  private renderFile(filePath: string, params: TemplateContext = {}): string {
-    if (!existsSync(filePath))
-      throw new FileExistsException(`View file not found: ${filePath}`);
+  private async renderFile(
+    filePath: string,
+    params: TemplateContext = {},
+  ): Promise<string> {
+    try {
+      if (this.cacheTemplates.has(filePath)) {
+        const cached = this.cacheTemplates.get(filePath)!;
+        return this.templateEngine.render(cached, params);
+      }
 
-    const fileContent = readFileSync(filePath, "utf-8");
-    return this.templateEngine.render(fileContent, params);
+      const fileContent = await readFile(filePath, "utf-8");
+
+      this.cacheTemplates.set(filePath, fileContent);
+      return this.templateEngine.render(fileContent, params);
+    } catch {
+      throw new FileExistsException(`View file not found: ${filePath}`);
+    }
   }
 
   public setDefaultLayout(layout: string): void {

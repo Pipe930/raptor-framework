@@ -1,5 +1,5 @@
 import { TemplateEngine } from "./view";
-import { existsSync, readFileSync } from "node:fs";
+import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { HelperFunction, TemplateContext } from "../utils/types";
 
@@ -69,10 +69,13 @@ export class SimpleTemplateEngine implements TemplateEngine {
    * // Resultado:
    * // <h1>Hello Felipe</h1>
    */
-  public render(template: string, context: TemplateContext = {}): string {
+  public async render(
+    template: string,
+    context: TemplateContext = {},
+  ): Promise<string> {
     let result = template;
 
-    result = this.processPartials(result, context);
+    result = await this.processPartials(result, context);
     result = this.processEach(result, context);
     result = this.processIf(result, context);
     result = this.processHelpers(result, context);
@@ -155,27 +158,33 @@ export class SimpleTemplateEngine implements TemplateEngine {
    * // En plantilla:
    * {{> header}}
    */
-  private processPartials(template: string, context: TemplateContext): string {
+  private async processPartials(
+    template: string,
+    context: TemplateContext,
+  ): Promise<string> {
     const partialRegex = /\{\{>\s*([a-zA-Z0-9/_-]+)\s*\}\}/g;
+    let result = template;
 
-    return template.replace(
-      partialRegex,
-      (match: string, partialName: string) => {
-        const partialPath = join(
-          this.viewsDirectory,
-          "partials",
-          `${partialName}.html`,
-        );
+    const matches = [...template.matchAll(partialRegex)];
+    for (const match of matches) {
+      const partialName = match[1];
+      const partialPath = join(
+        this.viewsDirectory,
+        "partials",
+        `${partialName}.html`,
+      );
 
-        if (!existsSync(partialPath)) {
-          console.warn(`Partial not found: ${partialPath}`);
-          return "";
-        }
+      try {
+        const partialContent = await readFile(partialPath, "utf-8");
+        const rendered = await this.render(partialContent, context);
+        result = result.replace(match[0], rendered);
+      } catch (error) {
+        console.warn(`Partial not found: ${partialPath}`);
+        result = result.replace(match[0], "");
+      }
+    }
 
-        const partialContent = readFileSync(partialPath, "utf-8");
-        return this.render(partialContent, context);
-      },
-    );
+    return result;
   }
 
   /**

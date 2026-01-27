@@ -110,7 +110,7 @@ export class Response {
    *   return Response.json([{ id: 1 }, { id: 2 }]);
    * });
    */
-  public static json(data: unknown): Response {
+  public static json<T>(data: T): Response {
     return new this()
       .setContentType("application/json")
       .setContent(JSON.stringify(data));
@@ -167,12 +167,16 @@ export class Response {
    * se usa el layout por defecto configurado en el motor de vistas.
    * @returns Respuesta HTTP lista para ser enviada al cliente.
    */
-  public static view(
+  public static async view(
     view: string,
     params: TemplateContext,
     layout: string = null,
-  ): Response {
-    const content = Container.resolve(App).view.render(view, params, layout);
+  ): Promise<Response> {
+    const content = await Container.resolve(App).view.render(
+      view,
+      params,
+      layout,
+    );
 
     return new this().setContentType("text/html").setContent(content);
   }

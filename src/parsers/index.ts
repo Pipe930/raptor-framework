@@ -1,4 +1,5 @@
 export { ContentParserManager } from "./contentParserManager";
+export { ContentParser } from "./contentParser";
 export { JsonParser } from "./jsonParser";
 export { MultipartParser } from "./multipartParser";
 export { TextParser } from "./textParser";

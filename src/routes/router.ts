@@ -70,7 +70,7 @@ export class Router {
    * const request = new Request('POST', '/users');
    * const response = router.resolve(request);
    */
-  public resolve(request: Request): Response {
+  public resolve(request: Request): Promise<Response> | Response {
     const layer = this.resolveLayer(request);
     request.setLayer(layer);
     const action = layer.getAction;
@@ -108,7 +108,7 @@ export class Router {
     request: Request,
     middlewares: Middleware[],
     target: RouteHandler,
-  ): Response {
+  ): Response | Promise<Response> {
     if (middlewares.length === 0) return target(request);
 
     return middlewares[0].handle(request, (request) =>

@@ -40,5 +40,5 @@ export interface Middleware {
    *
    * @returns Debe retornar siempre una instancia de Response.
    */
-  handle(request: Request, next: NextFunction): Response;
+  handle(request: Request, next: NextFunction): Response | Promise<Response>;
 }

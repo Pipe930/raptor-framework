@@ -73,9 +73,7 @@ export class MultipartParser implements ContentParser {
     const parts = this.splitBuffer(buffer, boundaryBuffer);
 
     for (const part of parts) {
-      if (part.length === 0 || part.toString().trim() === "--") {
-        continue;
-      }
+      if (part.length === 0 || part.toString().trim() === "--") continue;
 
       const parsed = this.parsePart(part);
       if (parsed) {
