@@ -97,16 +97,22 @@ describe("RouterTest", () => {
 
   it("should valid run middlewares", async () => {
     const middleware1 = class {
-      public handle(request: Request, next: NextFunction): Response {
-        const response = next(request);
+      public async handle(
+        request: Request,
+        next: NextFunction,
+      ): Promise<Response> {
+        const response = await next(request);
         response.setHeader("x-test-one", "one");
         return response;
       }
     };
 
     const middleware2 = class {
-      public handle(request: Request, next: NextFunction): Response {
-        const response = next(request);
+      public async handle(
+        request: Request,
+        next: NextFunction,
+      ): Promise<Response> {
+        const response = await next(request);
         response.setHeader("x-test-two", "two");
         return response;
       }
@@ -120,7 +126,7 @@ describe("RouterTest", () => {
       .setMiddlewares([middleware1, middleware2]);
 
     const requestMock = await createRequestMock(url, HttpMethods.get);
-    const response = router.resolve(requestMock);
+    const response = await router.resolve(requestMock);
 
     expect(responseExcepted).toBe(response);
     expect(response.getHeaders["x-test-one"]).toBe("one");
@@ -135,8 +141,11 @@ describe("RouterTest", () => {
     };
 
     const middleware2 = class {
-      public handle(request: Request, next: NextFunction): Response {
-        const response = next(request);
+      public async handle(
+        request: Request,
+        next: NextFunction,
+      ): Promise<Response> {
+        const response = await next(request);
         response.setHeader("x-test-two", "two");
         return response;
       }
@@ -150,7 +159,7 @@ describe("RouterTest", () => {
       .setMiddlewares([middlewareStopped, middleware2]);
 
     const requestMock = await createRequestMock(url, HttpMethods.get);
-    const response = router.resolve(requestMock);
+    const response = await router.resolve(requestMock);
 
     expect("stopped").toBe(response.getContent);
     expect(response.getHeaders["x-test-two"]).toBeUndefined();
