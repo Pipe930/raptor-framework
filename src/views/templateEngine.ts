@@ -1,7 +1,8 @@
 import { TemplateEngine } from "./view";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { HelperFunction, TemplateContext } from "../utils/types";
+import { HelpersManager } from "./helpersTemplate";
+import { TemplateContext } from "../utils/types";
 
 /**
  * Motor de plantillas minimalista inspirado en Handlebars.
@@ -20,14 +21,12 @@ import { HelperFunction, TemplateContext } from "../utils/types";
  */
 export class SimpleTemplateEngine implements TemplateEngine {
   /**
-   * Registro interno de helpers disponibles en las plantillas.
-   * La clave es el nombre del helper y el valor es la función ejecutable.
+   * Gestor de helpers del motor.
    */
-  private helpers = new Map<string, HelperFunction>();
+  private helpersManager: HelpersManager;
+
   /**
    * Directorio base donde se encuentran las vistas y partials.
-   * Ejemplo: /views
-   * Los partials se buscan en: /views/partials
    */
   private viewsDirectory: string;
 
@@ -38,36 +37,22 @@ export class SimpleTemplateEngine implements TemplateEngine {
    */
   constructor(viewsDirectory: string) {
     this.viewsDirectory = viewsDirectory;
-    this.registerDefaultHelpers();
+    this.helpersManager = new HelpersManager();
   }
 
   /**
    * Renderiza una plantilla aplicando un contexto de datos.
    *
-   * Este método es el punto de entrada principal del motor.
-   * Ejecuta el pipeline completo de procesamiento:
-   *
+   * Pipeline de procesamiento:
    * 1. Partials
-   * 2. Each
-   * 3. If
-   * 4. Helpers
-   * 5. Interpolación
+   * 2. Each (con if/helpers/interpolación internos)
+   * 3. If (globales)
+   * 4. Helpers (globales)
+   * 5. Interpolación (global)
    *
-   * @param template Contenido de la plantilla (string HTML).
-   * @param context Objeto con los datos disponibles en la vista.
-   *
-   * @returns Devuelve el HTML final completamente renderizado.
-   *
-   * @example
-   * const engine = new SimpleTemplateEngine("./views");
-   *
-   * const html = engine.render(
-   *   "<h1>Hello {{ user.name }}</h1>",
-   *   { user: { name: "Felipe" } }
-   * );
-   *
-   * // Resultado:
-   * // <h1>Hello Felipe</h1>
+   * @param template Contenido de la plantilla.
+   * @param context Datos para la vista.
+   * @returns HTML renderizado.
    */
   public async render(
     template: string,
@@ -87,80 +72,34 @@ export class SimpleTemplateEngine implements TemplateEngine {
   /**
    * Registra un helper personalizado.
    *
-   * Los helpers permiten extender el lenguaje de plantillas
-   * con funciones reutilizables.
-   *
    * @param name Nombre del helper.
    * @param fn Función ejecutable del helper.
-   *
-   * @example
-   * engine.registerHelper("currency", (value: number) => {
-   *   return `$${value.toFixed(2)}`;
-   * });
-   *
-   * // En la plantilla:
-   * // {{ currency price }}
    */
-  public registerHelper(name: string, fn: HelperFunction): void {
-    this.helpers.set(name, fn);
+  public registerHelper(
+    name: string,
+    fn: (...args: unknown[]) => string,
+  ): void {
+    this.helpersManager.register(name, fn);
   }
 
   /**
-   * Registra helpers por defecto del motor.
+   * Obtiene el gestor de helpers (útil para testing o extensión).
    *
-   * Helpers incluidos:
-   * - date: formatea fechas
-   * - upper: convierte a mayúsculas
-   * - lower: convierte a minúsculas
-   * - truncate: recorta texto
+   * @returns Instancia del HelpersManager.
    */
-  private registerDefaultHelpers(): void {
-    this.helpers.set(
-      "date",
-      (date: string | Date, format: string = "default") => {
-        const d = new Date(date);
-        if (format === "short") return d.toLocaleDateString();
-        return d.toLocaleString();
-      },
-    );
-
-    this.helpers.set("upper", (str: string) => {
-      return String(str).toUpperCase();
-    });
-
-    this.helpers.set("lower", (str: string) => {
-      return String(str).toLowerCase();
-    });
-
-    this.helpers.set("truncate", (str: string, length: number = 50) => {
-      const text = String(str);
-      return text.length > length ? text.substring(0, length) + "..." : text;
-    });
-
-    this.helpers.set("currency", (amount: number) => {
-      return `$${amount.toFixed(2)}`;
-    });
+  public getHelpersManager(): HelpersManager {
+    return this.helpersManager;
   }
 
   /**
    * Procesa partials.
    *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
-   *
-   * Sintaxis:
-   * {{> partialName}}
-   *
-   * Busca el archivo:
-   * {viewsDirectory}/partials/partialName.html
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template renderizado con los helpers cargados
    *
    * @example
-   * // views/partials/header.html
-   * <header>My App</header>
-   *
-   * // En plantilla:
-   * {{> header}}
+   * Sintaxis: {{> partialName}}
    */
   private async processPartials(
     template: string,
@@ -193,30 +132,11 @@ export class SimpleTemplateEngine implements TemplateEngine {
   /**
    * Procesa bloques iterativos.
    *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template renderizado con los helpers cargados
    *
-   * Sintaxis:
-   * {{#each items}}
-   *   {{ this.name }} - {{ @index }}
-   * {{/each}}
-   *
-   * Variables disponibles:
-   * - this: elemento actual
-   * - this.prop: propiedad del elemento
-   * - @index: índice
-   * - @first: boolean
-   * - @last: boolean
-   *
-   * @example
-   * const template = `
-   * <ul>
-   *   {{#each users}}
-   *     <li>{{ this.name }}</li>
-   *   {{/each}}
-   * </ul>
-   * `;
+   * Sintaxis: {{#each items}} ... {{/each}}
    */
   private processEach(template: string, context: TemplateContext): string {
     const eachRegex =
@@ -241,17 +161,12 @@ export class SimpleTemplateEngine implements TemplateEngine {
 
             let itemContent = content;
 
-            // Orden de procesamiento dentro del each:
-            // 1. Condicionales (necesitan acceso a this.property)
+            // Pipeline dentro de each
             itemContent = this.processIfWithContext(itemContent, itemContext);
-
-            // 2. Helpers (necesitan acceso a this.property)
             itemContent = this.processHelpersWithContext(
               itemContent,
               itemContext,
             );
-
-            // 3. Interpolaciones (reemplazan this.property y @variables)
             itemContent = this.processInterpolationWithContext(
               itemContent,
               itemContext,
@@ -265,22 +180,11 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa bloques condicionales usando un contexto específico.
+   * Procesa condicionales con contexto específico (dentro de each).
    *
-   * Esta variante es utilizada dentro de bloques `#each`, donde el contexto
-   * incluye variables especiales como `this`, `@index`, `@first` y `@last`.
-   *
-   * @param template Fragmento de plantilla a procesar.
-   * @param context Contexto específico del elemento iterado.
-   *
-   * @returns Fragmento de plantilla con el bloque `#if` resuelto.
-   *
-   * Sintaxis soportada:
-   * {{#if condition}}
-   *   contenido verdadero
-   * {{else}}
-   *   contenido falso
-   * {{/if}}
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template renderizado con los helpers cargados
    */
   private processIfWithContext(
     template: string,
@@ -299,26 +203,17 @@ export class SimpleTemplateEngine implements TemplateEngine {
       ) => {
         const value = this.resolveValue(condition, context);
         const isTruthy = this.isTruthy(value);
-
         return isTruthy ? truthyContent : falsyContent;
       },
     );
   }
 
   /**
-   * Procesa helpers usando un contexto específico.
+   * Procesa helpers con contexto específico (dentro de each).
    *
-   * Esta versión se ejecuta dentro de bloques `#each` para permitir
-   * que los helpers accedan a:
-   *
-   * - `this`
-   * - `this.prop`
-   * - `@index`, `@first`, `@last`
-   *
-   * @param template Fragmento de plantilla.
-   * @param context Contexto específico del bloque iterado.
-   *
-   * @returns Fragmento de plantilla con los helpers evaluados.
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template con
    */
   private processHelpersWithContext(
     template: string,
@@ -329,37 +224,24 @@ export class SimpleTemplateEngine implements TemplateEngine {
     return template.replace(
       helperRegex,
       (match: string, helperName: string, argsString: string) => {
-        const helper = this.helpers.get(helperName);
-        if (!helper) return match;
+        if (!this.helpersManager.has(helperName)) return match;
 
-        const args = this.parseHelperArgs(argsString.trim(), context);
-
-        try {
-          return helper(...args);
-        } catch (error) {
-          console.error(`Error executing helper ${helperName}:`, error);
-          return "";
-        }
+        return this.helpersManager.execute(
+          helperName,
+          argsString.trim(),
+          context,
+          this.resolveValue.bind(this),
+        );
       },
     );
   }
 
   /**
-   * Procesa interpolaciones usando un contexto personalizado.
+   * Procesa interpolaciones con contexto específico (dentro de each).
    *
-   * Esta variante se usa dentro de `#each` para resolver correctamente:
-   * - `this`
-   * - `this.prop`
-   * - Variables especiales (`@index`, etc.)
-   *
-   * Soporta:
-   * - Interpolación con escape: {{ variable }}
-   * - Interpolación sin escape: {{{ variable }}}
-   *
-   * @param template Fragmento de plantilla.
-   * @param context Contexto específico del bloque.
-   *
-   * @returns Fragmento de plantilla interpolado.
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template con la interpolacion cargada
    */
   private processInterpolationWithContext(
     template: string,
@@ -387,25 +269,11 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa bloques condicionales.
+   * Procesa condicionales globales.
    *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
-   *
-   * Sintaxis:
-   * {{#if condition}}
-   *   contenido verdadero
-   * {{else}}
-   *   contenido falso
-   * {{/if}}
-   *
-   * @example
-   * {{#if user.isAdmin}}
-   *   <button>Admin Panel</button>
-   * {{else}}
-   *   <p>User</p>
-   * {{/if}}
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template con los condicionales renderizados
    */
   private processIf(template: string, context: TemplateContext): string {
     const ifRegex =
@@ -421,25 +289,17 @@ export class SimpleTemplateEngine implements TemplateEngine {
       ) => {
         const value = this.resolveValue(condition, context);
         const isTruthy = this.isTruthy(value);
-
         return isTruthy ? truthyContent : falsyContent;
       },
     );
   }
 
   /**
-   * Procesa helpers definidos.
+   * Procesa helpers globales.
    *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
-   *
-   * Sintaxis:
-   * {{ helperName arg1 arg2 }}
-   *
-   * @example
-   * {{ upper user.name }}
-   * {{ truncate post.content 100 }}
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template con los helpers renderizados
    */
   private processHelpers(template: string, context: TemplateContext): string {
     const helperRegex = /\{\{\s*([a-zA-Z0-9_]+)\s+([^}]+?)\s*\}\}/g;
@@ -447,121 +307,30 @@ export class SimpleTemplateEngine implements TemplateEngine {
     return template.replace(
       helperRegex,
       (match: string, helperName: string, argsString: string) => {
-        const helper = this.helpers.get(helperName);
+        if (!this.helpersManager.has(helperName)) return match;
 
-        if (!helper) return match;
-
-        const args = this.parseHelperArgs(argsString.trim(), context);
-
-        try {
-          return helper(...args);
-        } catch (error) {
-          console.error(`Error executing helper ${helperName}:`, error);
-          console.error(`Helper: ${helperName}, Args:`, args);
-          return "";
-        }
+        return this.helpersManager.execute(
+          helperName,
+          argsString.trim(),
+          context,
+          this.resolveValue.bind(this),
+        );
       },
     );
   }
 
   /**
-   * Parsea los argumentos de un helper.
+   * Procesa interpolación global.
    *
-   * Soporta:
-   * - Strings entre comillas
-   * - Números
-   * - Booleanos
-   * - null
-   * - Paths del contexto (ej: user.name)
-   *
-   * Ejemplo:
-   * {{ truncate post.content 100 }}
-   *
-   * @param argsString Cadena de argumentos crudos del helper.
-   * @param context Contexto actual de renderizado.
-   *
-   * @returns Lista de argumentos ya parseados y tipados.
-   */
-  private parseHelperArgs(
-    argsString: string,
-    context: TemplateContext,
-  ): unknown[] {
-    const args: unknown[] = [];
-    let currentArg = "";
-    let inQuotes = false;
-
-    for (let i = 0; i < argsString.length; i++) {
-      const char = argsString[i];
-
-      if (char === '"' && (i === 0 || argsString[i - 1] !== "\\")) {
-        inQuotes = !inQuotes;
-        currentArg += char;
-      } else if (char === " " && !inQuotes) {
-        if (currentArg.trim()) {
-          args.push(this.parseArgument(currentArg.trim(), context));
-          currentArg = "";
-        }
-      } else {
-        currentArg += char;
-      }
-    }
-
-    if (currentArg.trim())
-      args.push(this.parseArgument(currentArg.trim(), context));
-
-    return args;
-  }
-
-  /**
-   * Parsea un argumento individual de un helper.
-   *
-   * Reglas de parsing:
-   * - "texto" → string
-   * - 123 → number
-   * - true / false → boolean
-   * - null → null
-   * - path → resolución desde el contexto
-   *
-   * @param arg Argumento crudo.
-   * @param context Contexto actual.
-   *
-   * @returns Valor parseado.
-   */
-  private parseArgument(arg: string, context: TemplateContext): unknown {
-    if (arg.startsWith('"') && arg.endsWith('"')) return arg.slice(1, -1);
-    if (!isNaN(Number(arg)) && arg !== "") return Number(arg);
-
-    if (arg === "true") return true;
-    if (arg === "false") return false;
-
-    if (arg === "null") return null;
-
-    const value = this.resolveValue(arg, context);
-
-    if (value === undefined)
-      console.warn(`Helper argument "${arg}" resolved to undefined`);
-
-    return value;
-  }
-
-  /**
-   * Procesa interpolación de variables.
-   *
-   * @param template Nombre del template o vista
-   * @param context Datos que seran inyectados al HTML
-   * @returns Devuelve la vista o el HTML renderisado
-   *
-   * - Con escape HTML: {{ variable }}
-   * - Sin escape: {{{ variable }}}
-   *
-   * @example
-   * <p>{{ user.bio }}</p>
+   * @param template Template o vista a procesar
+   * @param context Variables locales del template
+   * @returns Devuelve el template con la interpolacion renderizada
    */
   private processInterpolation(
     template: string,
     context: TemplateContext,
   ): string {
-    // Interpolación sin escape: {{{ variable }}}
+    // Sin escape: {{{ variable }}}
     template = template.replace(
       /\{\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}\}/g,
       (match: string, path: string) => {
@@ -570,7 +339,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
       },
     );
 
-    // Interpolación con escape: {{ variable }}
+    // Con escape: {{ variable }}
     template = template.replace(
       /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g,
       (match: string, path: string) => {
@@ -583,17 +352,11 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Resuelve un path dot-notation dentro del contexto.
+   * Resuelve un path en el contexto.
    *
-   * Convierte:
-   * "user.profile.name"
-   * en:
-   * context.user.profile.name
-   *
-   * @param path Ruta a resolver.
-   * @param context Contexto base.
-   *
-   * @returns Valor encontrado o `undefined` si no existe.
+   * @param path Ruta del template a cargar
+   * @param context Variables locales del template
+   * @returns Devuelve la ruta o el path resuelto
    */
   private resolveValue(path: string, context: TemplateContext): unknown {
     const parts = path.split(".");
@@ -613,11 +376,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Determina si un valor es considerado "truthy".
-   * Se usa en bloques #if.
-   *
-   * @param value valor de los #if
-   * @returns Devuelve un buleano validando el dato
+   * Determina si un valor es truthy.
    */
   private isTruthy(value: unknown): boolean {
     if (value === false || value === null || value === undefined) return false;
@@ -627,18 +386,10 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Escapa caracteres HTML peligrosos para prevenir XSS.
+   * Escapa caracteres HTML para prevenir XSS.
    *
-   * Caracteres escapados:
-   * - &
-   * - <
-   * - >
-   * - "
-   * - '
-   *
-   * @param text Texto original.
-   *
-   * @returns Texto seguro para renderizar en HTML.
+   * @param text Texto a renderizar
+   * @returns Devuelve el texto parseado o renderizado
    */
   private escapeHtml(text: string): string {
     const map: Record<string, string> = {
