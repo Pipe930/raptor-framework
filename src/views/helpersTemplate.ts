@@ -124,21 +124,16 @@ export class HelpersManager {
       if (char === '"' && (i === 0 || argsString[i - 1] !== "\\")) {
         inQuotes = !inQuotes;
         currentArg += char;
-      } else if (char === " " && !inQuotes) {
-        if (currentArg.trim()) {
-          args.push(
-            this.parseArgument(currentArg.trim(), context, resolveValue),
-          );
-          currentArg = "";
-        }
+      } else if (char === " " && !inQuotes && currentArg.trim()) {
+        args.push(this.parseArgument(currentArg.trim(), context, resolveValue));
+        currentArg = "";
       } else {
         currentArg += char;
       }
     }
 
-    if (currentArg.trim()) {
+    if (currentArg.trim())
       args.push(this.parseArgument(currentArg.trim(), context, resolveValue));
-    }
 
     return args;
   }
@@ -166,9 +161,8 @@ export class HelpersManager {
     // Variable del contexto
     const value = resolveValue(arg, context);
 
-    if (value === undefined) {
+    if (value === undefined)
       console.warn(`Helper argument "${arg}" resolved to undefined`);
-    }
 
     return value;
   }

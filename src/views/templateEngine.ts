@@ -2,7 +2,7 @@ import { TemplateEngine } from "./view";
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { HelpersManager } from "./helpersTemplate";
-import { TemplateContext } from "../utils/types";
+import { HelperFunction, TemplateContext } from "../utils/types";
 
 /**
  * Motor de plantillas minimalista inspirado en Handlebars.
@@ -75,10 +75,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
    * @param name Nombre del helper.
    * @param fn Función ejecutable del helper.
    */
-  public registerHelper(
-    name: string,
-    fn: (...args: unknown[]) => string,
-  ): void {
+  public registerHelper(name: string, fn: HelperFunction): void {
     this.helpersManager.register(name, fn);
   }
 
@@ -87,7 +84,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
    *
    * @returns Instancia del HelpersManager.
    */
-  public getHelpersManager(): HelpersManager {
+  public get getHelpersManager(): HelpersManager {
     return this.helpersManager;
   }
 
@@ -167,9 +164,10 @@ export class SimpleTemplateEngine implements TemplateEngine {
               itemContent,
               itemContext,
             );
-            itemContent = this.processInterpolationWithContext(
+            itemContent = this.processInterpolation(
               itemContent,
               itemContext,
+              true,
             );
 
             return itemContent;
@@ -237,38 +235,6 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa interpolaciones con contexto específico (dentro de each).
-   *
-   * @param template Template o vista a procesar
-   * @param context Variables locales del template
-   * @returns Devuelve el template con la interpolacion cargada
-   */
-  private processInterpolationWithContext(
-    template: string,
-    context: TemplateContext,
-  ): string {
-    // Sin escape: {{{ variable }}}
-    template = template.replace(
-      /\{\{\{\s*([a-zA-Z0-9_.@]+)\s*\}\}\}/g,
-      (match: string, path: string) => {
-        const value = this.resolveValue(path, context);
-        return String(value ?? "");
-      },
-    );
-
-    // Con escape: {{ variable }}
-    template = template.replace(
-      /\{\{\s*([a-zA-Z0-9_.@]+)\s*\}\}/g,
-      (match: string, path: string) => {
-        const value = this.resolveValue(path, context);
-        return this.escapeHtml(String(value ?? ""));
-      },
-    );
-
-    return template;
-  }
-
-  /**
    * Procesa condicionales globales.
    *
    * @param template Template o vista a procesar
@@ -320,28 +286,35 @@ export class SimpleTemplateEngine implements TemplateEngine {
   }
 
   /**
-   * Procesa interpolación global.
+   * Procesa interpolación de variables.
    *
-   * @param template Template o vista a procesar
-   * @param context Variables locales del template
-   * @returns Devuelve el template con la interpolacion renderizada
+   * @param template Template a procesar
+   * @param context Contexto de datos
+   * @param includeSpecialVars Si debe soportar variables especiales (@index, etc)
    */
   private processInterpolation(
     template: string,
     context: TemplateContext,
+    includeSpecialVars: boolean = false,
   ): string {
+    // Determinar el patrón de captura según el contexto
+    const varPattern = includeSpecialVars
+      ? /\{\{\{\s*([a-zA-Z0-9_.@]+)\s*\}\}\}/g // Incluye @
+      : /\{\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}\}/g; // Sin @
+
+    const escapedVarPattern = includeSpecialVars
+      ? /\{\{\s*([a-zA-Z0-9_.@]+)\s*\}\}/g
+      : /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g;
+
     // Sin escape: {{{ variable }}}
-    template = template.replace(
-      /\{\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}\}/g,
-      (match: string, path: string) => {
-        const value = this.resolveValue(path, context);
-        return String(value ?? "");
-      },
-    );
+    template = template.replace(varPattern, (match: string, path: string) => {
+      const value = this.resolveValue(path, context);
+      return String(value ?? "");
+    });
 
     // Con escape: {{ variable }}
     template = template.replace(
-      /\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/g,
+      escapedVarPattern,
       (match: string, path: string) => {
         const value = this.resolveValue(path, context);
         return this.escapeHtml(String(value ?? ""));
