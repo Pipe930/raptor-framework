@@ -35,16 +35,15 @@ npm install my-framework
 ## 🏁 Uso básico
 
 ```ts
-import { App, Router } from "my-framework";
+import { App } from "my-framework";
+import { text } from "my-framework/helpers";
 
-const app = new App();
-const router = new Router();
+const app = App.bootstrap();
 
-router.get("/", () => {
-  return "Hello world";
+app.router.get("/test", (request: Request) => {
+  return text("Hello, World!");
 });
 
-app.use(router);
 app.listen(3000);
 ```
 
@@ -55,12 +54,72 @@ app.listen(3000);
 Las rutas se registran por método HTTP y path.
 
 ```ts
-router.post("/users", () => {
-  return { message: "User created" };
+app.router.get("/test/{param}", (request: Request) => {
+  return json(request.getlayerParameters());
+});
+
+app.router.post("/test", (request: Request) => {
+  return json(request.getData());
 });
 ```
 
 Internamente, el framework mantiene una estructura de datos para mapear métodos HTTP a sus rutas correspondientes.
+
+## 🛠️ Middlewares
+Para registrar middlewares, tienes que crear una clase que implemente la interfaz `Middleware`, con el metodo handle donde se ejecutara la funcionalidad que quieras que ejecute el middleware, y luego registrar el middleware en la aplicación.
+
+```ts
+import { Middleware, Request } from "my-framework/http";
+import { Layer } from "my-framework/routes";
+import { NextFunction } from "my-framework/utils/types";
+
+class TestMiddleware implements Middleware {
+  public async handle(request: Request, next: NextFunction): Promise<Response> {
+    if (request.getHeaders["authorization"] !== "test") {
+      return json({
+        message: "NotAuthenticated",
+      }).setStatus(401);
+    }
+
+    return await next(request);
+  }
+}
+
+Layer.get("/testMiddleware", (request: Request) =>
+  json({ message: "hola" }),
+).setMiddlewares([TestMiddleware]);
+
+```
+
+## 📄 Motor de Plantillas o Vistas
+Para poder utilizar el motor de plantillas del framework, debes utilizar el helper `view`, el cual recibe como primer parametro el nombre de la vista (archivo .html) y como segundo parametro un objeto con las variables que quieres pasar a la vista.
+
+```ts
+app.router.get("/home", (request: Request) => {
+  return view(
+    "home", // nombre de la vista (archivo .html)
+    {
+      title: "Productos",
+      products: [
+        { name: "Laptop", price: 999.99, inStock: true },
+        { name: "Mouse", price: 29.99, inStock: false },
+      ],
+      user: {
+        name: "Juan Pérez",
+        role: "admin",
+      },
+    }, // variables para la vista
+    "main", // nombre del layout (opcional) 
+  );
+});
+```
+
+Por ahora el motor se encuentra en una etapa muy temprana de desarrollo, por lo que solo soporta funcionalidades básicas como:
+* Renderizado de variables
+* Estructuras de control (if, for)
+* Layouts
+* Helpers simples (uppercase, lowercase, date)
+* Helpers personalizados
 
 ---
 
@@ -68,7 +127,8 @@ Internamente, el framework mantiene una estructura de datos para mapear métodos
 
 ⚠️ **Proyecto en desarrollo temprano**
 
-* La API puede cambiar sin previo aviso.
+* EL framework aún no está completo.
+* No se encuentra en una versión 100% estable.
 * Muchas funcionalidades aún no están implementadas.
 * No se recomienda su uso en producción.
 
@@ -76,9 +136,10 @@ Internamente, el framework mantiene una estructura de datos para mapear métodos
 
 ## 🔮 Roadmap (tentativo)
 
-* Middlewares
+* Middlewares (✅)
+* Motor de plantillas simple (✅)
+* Contexto de request/response (✅)
 * Manejo de errores
-* Contexto de request/response
 * Validación de datos
 * ORM y bases de datos
 * Autenticación y autorización
