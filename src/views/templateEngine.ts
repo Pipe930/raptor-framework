@@ -160,10 +160,7 @@ export class SimpleTemplateEngine implements TemplateEngine {
 
             // Pipeline dentro de each
             itemContent = this.processIf(itemContent, itemContext, true);
-            itemContent = this.processHelpersWithContext(
-              itemContent,
-              itemContext,
-            );
+            itemContent = this.processHelpers(itemContent, itemContext);
             itemContent = this.processInterpolation(
               itemContent,
               itemContext,
@@ -173,34 +170,6 @@ export class SimpleTemplateEngine implements TemplateEngine {
             return itemContent;
           })
           .join("");
-      },
-    );
-  }
-
-  /**
-   * Procesa helpers con contexto específico (dentro de each).
-   *
-   * @param template Template o vista a procesar
-   * @param context Variables locales del template
-   * @returns Devuelve el template con
-   */
-  private processHelpersWithContext(
-    template: string,
-    context: TemplateContext,
-  ): string {
-    const helperRegex = /\{\{\s*([a-zA-Z0-9_]+)\s+([^}]+?)\s*\}\}/g;
-
-    return template.replace(
-      helperRegex,
-      (match: string, helperName: string, argsString: string) => {
-        if (!this.helpersManager.has(helperName)) return match;
-
-        return this.helpersManager.execute(
-          helperName,
-          argsString.trim(),
-          context,
-          this.resolveValue.bind(this),
-        );
       },
     );
   }
