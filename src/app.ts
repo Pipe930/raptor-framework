@@ -1,6 +1,10 @@
 import { Router } from "./routes";
 import { HttpAdapter, Response } from "./http";
-import { HttpNotFoundException } from "./exceptions";
+import {
+  ContentParserException,
+  HttpNotFoundException,
+  ValidationException,
+} from "./exceptions";
 import { Server, NodeServer } from "./server";
 import { View, RaptorEngine } from "./views";
 import { join } from "node:path";
@@ -129,13 +133,30 @@ export class App {
    * @param {unknown} err - Error capturado durante la ejecución.
    * @param {HttpAdapter} adapter - Adaptador de salida.
    */
-  private handleError(err: unknown, adapter: HttpAdapter): void {
-    if (err instanceof HttpNotFoundException) {
+  private handleError(error: unknown, adapter: HttpAdapter): void {
+    if (error instanceof HttpNotFoundException) {
       adapter.sendResponse(Response.text("Not found").setStatus(404));
       return;
     }
 
+    if (error instanceof ContentParserException) {
+      adapter.sendResponse(
+        Response.json({ message: error.message }).setStatus(422),
+      );
+      return;
+    }
+
+    if (error instanceof ValidationException) {
+      adapter.sendResponse(
+        Response.json({
+          success: false,
+          errors: error.getErrorsByField(),
+        }).setStatus(422),
+      );
+      return;
+    }
+
     adapter.sendResponse(Response.text("Internal Server Error").setStatus(500));
-    console.error(err);
+    console.error(error);
   }
 }
