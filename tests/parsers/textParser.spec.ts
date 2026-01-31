@@ -7,7 +7,7 @@ describe("TextParserTest", () => {
     parser = new TextParser();
   });
 
-  it("should valid return true for content type text/, application/xml and application/xhtml", () => {
+  it("should valid return true for content type text/plain and application/xhtml", () => {
     expect(parser.canParse("text/plain")).toBe(true);
     expect(parser.canParse("application/xhtml")).toBe(true);
   });
