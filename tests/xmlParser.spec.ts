@@ -25,12 +25,14 @@ describe("XmlParserTest", () => {
   });
 
   it("should parse valid XML string", async () => {
-    const body = "<user><id>1</id><name>Juan</name></user>";
+    const body =
+      "<user><id>1</id><name>Juan</name><active>true</active></user>";
     const result = await parser.parse(body);
 
     expect(result).toEqual({
-      id: "1",
+      id: 1,
       name: "Juan",
+      active: true,
     });
   });
 
@@ -41,6 +43,13 @@ describe("XmlParserTest", () => {
     expect(result).toEqual({
       message: "HolaMundo",
     });
+  });
+
+  it("should handle empty values as null", async () => {
+    const xml = `<root><name></name></root>`;
+    const result = await parser.parse(xml);
+
+    expect(result).toEqual({});
   });
 
   it("should throw ContentParserException on invalid XML", async () => {

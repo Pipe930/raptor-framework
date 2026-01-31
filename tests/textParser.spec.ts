@@ -1,6 +1,6 @@
 import { TextParser } from "../src/parsers";
 
-describe("JsonParserTest", () => {
+describe("TextParserTest", () => {
   let parser: TextParser;
 
   beforeEach(() => {
