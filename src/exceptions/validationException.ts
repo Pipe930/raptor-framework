@@ -21,3 +21,10 @@ export class ValidationException extends BaseException {
     return grouped;
   }
 }
+
+export class ValidatorFieldException extends BaseException {
+  constructor() {
+    super("No field selected. Call field() first.", "VALIDATOR_FIELD_ERROR");
+    this.name = "ValidatorFieldException";
+  }
+}

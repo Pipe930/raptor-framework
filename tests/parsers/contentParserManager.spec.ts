@@ -1,4 +1,4 @@
-import { ContentParserManager, ContentParser } from "../src/parsers";
+import { ContentParserManager, ContentParser } from "../../src/parsers";
 
 describe("ContentParserManager", () => {
   let manager: ContentParserManager;

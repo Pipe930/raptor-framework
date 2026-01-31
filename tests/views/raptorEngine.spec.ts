@@ -1,7 +1,7 @@
 import { mkdir, writeFile, rm } from "fs/promises";
 import { join } from "path";
-import { RaptorEngine } from "../src/views";
-import { FileNotExistsException } from "../src/exceptions";
+import { RaptorEngine } from "../../src/views";
+import { FileNotExistsException } from "../../src/exceptions";
 
 describe("RaptorEngineTest", () => {
   const tmpDir = join(__dirname, "__views__");

@@ -1,5 +1,5 @@
-import { ContentParserException } from "../src/exceptions";
-import { XmlParser } from "../src/parsers";
+import { ContentParserException } from "../../src/exceptions";
+import { XmlParser } from "../../src/parsers";
 
 describe("XmlParserTest", () => {
   let parser: XmlParser;

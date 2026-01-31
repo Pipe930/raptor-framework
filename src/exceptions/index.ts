@@ -9,5 +9,7 @@ export {
   HelperNotFoundException,
   HelperArgumentException,
 } from "./helperExceptions";
-export { ValidationException } from "./validationException";
-export { ValidatorFieldException } from "./validatorFieldException";
+export {
+  ValidationException,
+  ValidatorFieldException,
+} from "./validationException";

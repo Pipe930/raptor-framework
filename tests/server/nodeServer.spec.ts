@@ -1,13 +1,13 @@
-import { NodeServer } from "../src/server";
-import { NodeHttpAdapter } from "../src/http";
+import { NodeServer } from "../../src/server";
+import { NodeHttpAdapter } from "../../src/http";
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
-import { App } from "../src/app";
+import { App } from "../../src/app";
 
 jest.mock("node:http", () => ({
   createServer: jest.fn(),
 }));
 
-jest.mock("../src/http/nodeNativeHttp", () => ({
+jest.mock("../../src/http/nodeNativeHttp", () => ({
   NodeHttpAdapter: jest.fn(),
 }));
 

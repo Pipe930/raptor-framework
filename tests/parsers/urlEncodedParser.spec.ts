@@ -1,4 +1,4 @@
-import { UrlEncodedParser } from "../src/parsers";
+import { UrlEncodedParser } from "../../src/parsers";
 
 describe("UrlEncodedParserTest", () => {
   let parser: UrlEncodedParser;
